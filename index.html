@@ -1,0 +1,739 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hotel Rate Comparator</title>
+  <style>
+    :root { --bg:#0b1020; --card:#111a33; --text:#e8ecff; --muted:#a9b2d6; --line:#22305a; --accent:#6aa6ff; }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#070a14,#0b1020);color:var(--text)}
+    .wrap{max-width:1100px;margin:0 auto;padding:16px}
+    h1{font-size:20px;margin:6px 0 14px}
+    .grid{display:grid;grid-template-columns:1fr;gap:12px}
+    @media (min-width:900px){ .grid{grid-template-columns:440px 1fr} }
+
+    .card{background:rgba(17,26,51,.9);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 10px 30px rgba(0,0,0,.25)}
+    label{display:block;font-size:12px;color:var(--muted);margin:10px 0 6px}
+    input,select,textarea,button{
+      width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--line);
+      background:#0c1430;color:var(--text);outline:none
+    }
+    textarea{min-height:70px;resize:vertical}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btns{display:flex;gap:10px;margin-top:10px}
+    button{cursor:pointer;font-weight:600}
+    .primary{background:linear-gradient(180deg,#2f7cff,#1f5dff);border:none}
+    .ghost{background:transparent}
+    .danger{background:transparent;border:1px solid #7b2f3a;color:#ffb6c0}
+
+    table{width:100%;border-collapse:separate;border-spacing:0;overflow:hidden;border-radius:14px;border:1px solid var(--line)}
+    thead th{
+      text-align:left;font-size:12px;color:var(--muted);background:#0c1430;padding:10px;border-bottom:1px solid var(--line);
+      position:sticky;top:0;z-index:1
+    }
+    tbody td{padding:10px;border-bottom:1px solid rgba(34,48,90,.6);vertical-align:top}
+    tbody tr:hover{background:rgba(106,166,255,.06)}
+    .pill{display:inline-flex;gap:6px;align-items:center;font-size:12px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;color:var(--muted);margin-top:6px}
+
+    .thumb{
+      width:34px;height:34px;border-radius:10px;border:1px solid var(--line);
+      background:#0c1430;display:inline-flex;align-items:center;justify-content:center;
+      overflow:hidden
+    }
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .thumbBtn{background:transparent;border:none;padding:0;cursor:pointer}
+
+    .actions{display:flex;gap:8px;flex-wrap:wrap}
+    .linkbtn{background:transparent;border:1px solid var(--line);color:var(--text);padding:6px 10px;border-radius:10px;font-size:12px;width:auto}
+    .topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .topbar > *{flex:1}
+    .topbar .small{flex:0 0 240px}
+    .topbar .tiny{flex:0 0 150px}
+
+    .hint{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.4}
+    .muted{color:var(--muted)}
+    .sectionTitle{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+    .mini{font-size:12px;color:var(--muted)}
+
+    /* Room temp list */
+    .roomItem{
+      border:1px solid rgba(34,48,90,.9);
+      background:rgba(12,20,48,.55);
+      border-radius:14px;
+      padding:10px;
+      margin-top:10px
+    }
+    .roomHead{display:flex;justify-content:space-between;gap:10px;align-items:center}
+    .roomHead b{font-size:13px}
+    .roomMeta{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+    .tinyThumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+    .tinyThumb{width:42px;height:42px;border-radius:12px;border:1px solid var(--line);overflow:hidden;background:#0c1430}
+    .tinyThumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+    /* Table indentation for room rows */
+    .subRow td{background:rgba(12,20,48,.35)}
+    .indent{padding-left:18px}
+
+    /* Hotel row style (no big empty cells) */
+    .hotelRow td{background:rgba(12,20,48,.15)}
+    .hotelTitle{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+    .hotelTitle .name{font-weight:900;font-size:16px}
+    .hotelStats{display:flex;gap:10px;flex-wrap:wrap}
+
+    /* Modal */
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
+    .modal.show{display:flex}
+    .modalBox{width:min(900px,100%);background:#0b1020;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+    .modalHead{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);background:#0c1430}
+    .modalHead b{font-size:13px;color:var(--muted)}
+    .close{width:auto;padding:8px 10px;border-radius:10px}
+    .viewer{position:relative;aspect-ratio:16/10;background:#000}
+    .viewer img{width:100%;height:100%;object-fit:contain;display:block}
+    .navBtn{
+      position:absolute;top:50%;transform:translateY(-50%);
+      width:auto;padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.25);
+      background:rgba(0,0,0,.35);color:#fff
+    }
+    .prev{left:10px} .next{right:10px}
+    .caption{padding:10px 12px;color:var(--muted);font-size:12px;border-top:1px solid var(--line)}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Hotel Rate Comparator</h1>
+
+  <div class="grid">
+    <!-- Form -->
+    <div class="card">
+      <b class="muted">Add / Edit Hotel</b>
+
+      <label>Hotel / Location name</label>
+      <input id="hotelName" placeholder="e.g., Negombo - Ocean View Hotel" />
+
+      <div class="sectionTitle">
+        <b class="muted">Room (single card)</b>
+        <span class="mini">Add one room → “Add Room to Hotel” → repeat</span>
+      </div>
+
+      <label>Room type name</label>
+      <input id="roomType" placeholder="e.g., Standard / Deluxe / Family" />
+
+      <div class="row">
+        <div>
+          <label>Hours</label>
+          <input id="roomHours" type="number" min="0" step="0.5" placeholder="e.g., 6" />
+        </div>
+        <div>
+          <label>Price (LKR)</label>
+          <input id="roomPrice" type="number" min="0" step="1" placeholder="e.g., 8500" />
+        </div>
+      </div>
+
+      <label>Note (optional)</label>
+      <textarea id="roomNote" placeholder="e.g., AC / breakfast / extra person price..."></textarea>
+
+      <label>Room photos (multiple)</label>
+      <input id="roomPhotos" type="file" accept="image/*" multiple />
+
+      <div class="btns">
+        <button class="linkbtn" id="addRoomBtn" type="button">+ Add Room to Hotel</button>
+        <button class="ghost" id="clearRoomBtn" type="button">Clear Room</button>
+      </div>
+
+      <div class="sectionTitle">
+        <b class="muted">Rooms added to this hotel</b>
+        <span class="pill" id="roomCountPill">🛏️ 0</span>
+      </div>
+      <div id="tempRooms"></div>
+
+      <div class="btns">
+        <button class="primary" id="saveHotelBtn" type="button">Save Hotel to List</button>
+        <button class="ghost" id="clearAllBtn" type="button">Clear All</button>
+      </div>
+
+      <div class="hint">
+        ✅ Rooms are stored temporarily until you click <b>Save Hotel to List</b>.
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <label>Search</label>
+          <input id="search" placeholder="type hotel / room type / note..." />
+        </div>
+
+        <div class="small">
+          <label>Sort hotels by</label>
+          <select id="sortBy">
+            <option value="createdDesc">Newest first</option>
+            <option value="minPriceAsc">Cheapest room price (low → high)</option>
+            <option value="minPriceDesc">Cheapest room price (high → low)</option>
+            <option value="minHoursAsc">Lowest hours (low → high)</option>
+            <option value="minHoursDesc">Lowest hours (high → low)</option>
+          </select>
+        </div>
+
+        <div class="tiny">
+          <label>Export / Import</label>
+          <select id="dataActions">
+            <option value="">Choose…</option>
+            <option value="export">Export JSON</option>
+            <option value="import">Import JSON</option>
+            <option value="wipe">Wipe all</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;max-height:70vh;overflow:auto;border-radius:14px">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px">Photos</th>
+              <th>Hotel</th>
+              <th style="width:140px">Hours</th>
+              <th style="width:160px">Price (LKR)</th>
+              <th>Note</th>
+              <th style="width:170px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="hint">
+        Hotel rows don’t show empty columns anymore. Rooms are <b>shown by default</b>. Tap <b>Hide Rooms</b> to collapse.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal viewer -->
+<div class="modal" id="modal">
+  <div class="modalBox">
+    <div class="modalHead">
+      <b id="modalTitle">Photos</b>
+      <button class="close ghost" id="closeModal" type="button">Close</button>
+    </div>
+    <div class="viewer" id="viewer">
+      <img id="viewImg" alt="room photo" />
+      <button class="navBtn prev" id="prevBtn" type="button">◀</button>
+      <button class="navBtn next" id="nextBtn" type="button">▶</button>
+    </div>
+    <div class="caption" id="caption"></div>
+  </div>
+</div>
+
+<input id="importFile" type="file" accept="application/json" style="display:none" />
+
+<script>
+  const LS_KEY = "hotel_rate_compare_rooms_v5_compact_hotelrow";
+  const $ = (id) => document.getElementById(id);
+
+  const state = {
+    hotels: [],
+    hidden: new Set(),      // rooms shown by default; store hidden hotelIds
+    editingHotelId: null,
+    tempRooms: [],
+    modal: { mode:null, hotelId:null, roomId:null, idx:0 },
+    tempModalPhotos: null
+  };
+
+  function uid(){ return Math.random().toString(36).slice(2) + Date.now().toString(36); }
+
+  function load(){
+    try { state.hotels = JSON.parse(localStorage.getItem(LS_KEY) || "[]"); }
+    catch { state.hotels = []; }
+  }
+  function save(){ localStorage.setItem(LS_KEY, JSON.stringify(state.hotels)); }
+
+  function escapeHtml(s){
+    return String(s ?? "")
+      .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
+      .replaceAll('"',"&quot;").replaceAll("'","&#039;");
+  }
+  function fmtMoney(n){
+    const x = Number(n || 0);
+    return x.toLocaleString("en-LK");
+  }
+
+  function fileToCompressedDataURL(file, maxW = 1000, quality = 0.78) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const scale = Math.min(1, maxW / img.width);
+          const w = Math.round(img.width * scale);
+          const h = Math.round(img.height * scale);
+          const canvas = document.createElement("canvas");
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function hotelStats(h){
+    const rooms = h.rooms || [];
+    const minPrice = rooms.length ? Math.min(...rooms.map(r => Number(r.price || 0))) : 0;
+    const minHours = rooms.length ? Math.min(...rooms.map(r => Number(r.hours || 0))) : 0;
+    return { minPrice, minHours, roomCount: rooms.length };
+  }
+
+  function roomsShown(hotelId){
+    return !state.hidden.has(hotelId);
+  }
+
+  // ---------- Temp rooms ----------
+  function updateRoomCount(){
+    $("roomCountPill").textContent = "🛏️ " + state.tempRooms.length;
+  }
+
+  function clearRoomCard(){
+    $("roomType").value = "";
+    $("roomHours").value = "";
+    $("roomPrice").value = "";
+    $("roomNote").value = "";
+    $("roomPhotos").value = "";
+  }
+
+  async function addRoomToTemp(){
+    const type = $("roomType").value.trim();
+    const hours = parseFloat($("roomHours").value);
+    const price = parseFloat($("roomPrice").value);
+    const note = $("roomNote").value.trim();
+    const files = Array.from($("roomPhotos").files || []);
+
+    if (!type) return alert("Please enter Room type name.");
+    if (!Number.isFinite(hours) || hours <= 0) return alert("Please enter valid hours.");
+    if (!Number.isFinite(price) || price < 0) return alert("Please enter valid price.");
+
+    let photos = [];
+    if (files.length){
+      try {
+        for (const f of files) photos.push(await fileToCompressedDataURL(f));
+      } catch(e){
+        console.error(e);
+        alert("Some photos couldn't be processed. Try smaller images.");
+      }
+    }
+
+    state.tempRooms.push({ id: uid(), type, hours, price, note, photos });
+    renderTempRooms();
+    clearRoomCard();
+  }
+
+  function renderTempRooms(){
+    const box = $("tempRooms");
+    box.innerHTML = "";
+    updateRoomCount();
+
+    if (!state.tempRooms.length){
+      box.innerHTML = `<div class="mini" style="margin-top:8px">No rooms added yet.</div>`;
+      return;
+    }
+
+    state.tempRooms.forEach((r, idx) => {
+      const div = document.createElement("div");
+      div.className = "roomItem";
+      const pCount = (r.photos?.length || 0);
+
+      div.innerHTML = `
+        <div class="roomHead">
+          <b>${idx+1}. ${escapeHtml(r.type)}</b>
+          <div class="actions">
+            <button class="linkbtn" type="button" data-view-temp="${r.id}">View Photos</button>
+            <button class="linkbtn" type="button" data-edit-temp="${r.id}">Edit</button>
+            <button class="linkbtn danger" type="button" data-del-temp="${r.id}">Remove</button>
+          </div>
+        </div>
+        <div class="roomMeta">
+          <span class="pill">⏱️ ${escapeHtml(r.hours)} hrs</span>
+          <span class="pill">💰 ${fmtMoney(r.price)} LKR</span>
+          <span class="pill">🖼️ ${pCount}</span>
+        </div>
+        ${r.note ? `<div class="mini" style="margin-top:6px">${escapeHtml(r.note)}</div>` : ""}
+        <div class="tinyThumbs" data-prev="${r.id}"></div>
+      `;
+
+      box.appendChild(div);
+
+      const prev = div.querySelector(`[data-prev="${r.id}"]`);
+      (r.photos || []).slice(0,6).forEach(ph => {
+        const t = document.createElement("div");
+        t.className = "tinyThumb";
+        t.innerHTML = `<img src="${ph}" alt="preview">`;
+        prev.appendChild(t);
+      });
+    });
+
+    box.querySelectorAll("[data-del-temp]").forEach(b => b.addEventListener("click", () => {
+      state.tempRooms = state.tempRooms.filter(x => x.id !== b.dataset.delTemp);
+      renderTempRooms();
+    }));
+
+    box.querySelectorAll("[data-view-temp]").forEach(b => b.addEventListener("click", () => {
+      const room = state.tempRooms.find(x => x.id === b.dataset.viewTemp);
+      if (!room || !room.photos || !room.photos.length) return alert("No photos for this room.");
+      openTempModal(($("hotelName").value.trim() || "Hotel"), room.type, room.photos, 0);
+    }));
+
+    box.querySelectorAll("[data-edit-temp]").forEach(b => b.addEventListener("click", () => {
+      const room = state.tempRooms.find(x => x.id === b.dataset.editTemp);
+      if (!room) return;
+
+      $("roomType").value = room.type;
+      $("roomHours").value = room.hours;
+      $("roomPrice").value = room.price;
+      $("roomNote").value = room.note || "";
+      $("roomPhotos").value = "";
+
+      state.tempRooms = state.tempRooms.filter(x => x.id !== room.id);
+      renderTempRooms();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }));
+  }
+
+  function clearAllForm(){
+    state.editingHotelId = null;
+    $("hotelName").value = "";
+    clearRoomCard();
+    state.tempRooms = [];
+    $("saveHotelBtn").textContent = "Save Hotel to List";
+    renderTempRooms();
+  }
+
+  // ---------- Save / Edit / Delete ----------
+  function saveHotelToList(){
+    const name = $("hotelName").value.trim();
+    if (!name) return alert("Please enter Hotel / Location name.");
+    if (!state.tempRooms.length) return alert("Please add at least one room before saving the hotel.");
+
+    if (state.editingHotelId){
+      const idx = state.hotels.findIndex(h => h.id === state.editingHotelId);
+      if (idx >= 0){
+        state.hotels[idx] = { ...state.hotels[idx], name, rooms: state.tempRooms };
+      }
+    } else {
+      state.hotels.push({ id: uid(), name, rooms: state.tempRooms, createdAt: Date.now() });
+    }
+
+    save();
+    clearAllForm();
+    renderTable();
+  }
+
+  function editHotel(id){
+    const h = state.hotels.find(x => x.id === id);
+    if (!h) return;
+    state.editingHotelId = id;
+    $("hotelName").value = h.name;
+    state.tempRooms = (h.rooms || []).map(r => ({...r}));
+    $("saveHotelBtn").textContent = "Update Hotel in List";
+    renderTempRooms();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function deleteHotel(id){
+    const h = state.hotels.find(x => x.id === id);
+    if (!h) return;
+    if (!confirm(`Delete "${h.name}" and all rooms?`)) return;
+    state.hotels = state.hotels.filter(x => x.id !== id);
+    state.hidden.delete(id);
+    save();
+    renderTable();
+    if (state.editingHotelId === id) clearAllForm();
+  }
+
+  function deleteSavedRoom(key){
+    const [hid, rid] = key.split("::");
+    const h = state.hotels.find(x => x.id === hid);
+    if (!h) return;
+    const r = (h.rooms||[]).find(x => x.id === rid);
+    if (!r) return;
+    if (!confirm(`Delete room "${r.type}" from "${h.name}"?`)) return;
+
+    h.rooms = (h.rooms||[]).filter(x => x.id !== rid);
+    if (!h.rooms.length){
+      alert("Hotel has no rooms now, so hotel will be removed too.");
+      state.hotels = state.hotels.filter(x => x.id !== hid);
+      state.hidden.delete(hid);
+    }
+    save();
+    renderTable();
+
+    if (state.editingHotelId === hid) editHotel(hid);
+  }
+
+  // ---------- Search / Sort ----------
+  function getFilteredSortedHotels(){
+    const q = $("search").value.trim().toLowerCase();
+    let arr = state.hotels.filter(h => {
+      if (h.name.toLowerCase().includes(q)) return true;
+      return (h.rooms || []).some(r =>
+        (r.type || "").toLowerCase().includes(q) ||
+        (r.note || "").toLowerCase().includes(q)
+      );
+    });
+
+    const sortBy = $("sortBy").value;
+    arr.sort((a,b) => {
+      const A = hotelStats(a), B = hotelStats(b);
+      if (sortBy === "createdDesc") return (b.createdAt||0) - (a.createdAt||0);
+      if (sortBy === "minPriceAsc") return A.minPrice - B.minPrice;
+      if (sortBy === "minPriceDesc") return B.minPrice - A.minPrice;
+      if (sortBy === "minHoursAsc") return A.minHours - B.minHours;
+      if (sortBy === "minHoursDesc") return B.minHours - A.minHours;
+      return 0;
+    });
+
+    return arr;
+  }
+
+  // ---------- Table render (hotel row uses colspan => no big empty cells) ----------
+  function renderTable(){
+    const tbody = $("tbody");
+    tbody.innerHTML = "";
+
+    const hotels = getFilteredSortedHotels();
+    if (!hotels.length){
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="6" class="muted">No hotels yet. Add a hotel and rooms, then save.</td>`;
+      tbody.appendChild(tr);
+      return;
+    }
+
+    for (const h of hotels){
+      const st = hotelStats(h);
+      const shown = roomsShown(h.id);
+
+      const tr = document.createElement("tr");
+      tr.className = "hotelRow";
+      tr.innerHTML = `
+        <td colspan="5">
+          <div class="hotelTitle">
+            <div class="name">${escapeHtml(h.name)}</div>
+            <div class="hotelStats">
+              <span class="pill">🛏️ Rooms: ${st.roomCount}</span>
+              <span class="pill">⏱️ Best Hours: ${escapeHtml(st.minHours)}</span>
+              <span class="pill">💰 Best Price: ${fmtMoney(st.minPrice)} LKR</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="actions">
+            <button class="linkbtn" data-toggle="${h.id}">${shown ? "Hide Rooms" : "Show Rooms"}</button>
+            <button class="linkbtn" data-edit="${h.id}">Edit</button>
+            <button class="linkbtn danger" data-del="${h.id}">Delete</button>
+          </div>
+        </td>
+      `;
+      tbody.appendChild(tr);
+
+      if (shown){
+        for (const r of (h.rooms || [])){
+          const rHasPhotos = r.photos && r.photos.length;
+          const rThumb = rHasPhotos
+            ? `<button class="thumbBtn" title="View room photos" data-view-room="${h.id}::${r.id}">
+                 <span class="thumb"><img src="${r.photos[0]}" alt="thumb"></span>
+               </button>`
+            : `<span class="thumb" title="No photos">📷</span>`;
+
+          const sub = document.createElement("tr");
+          sub.className = "subRow";
+          sub.innerHTML = `
+            <td>${rThumb}</td>
+            <td class="indent">
+              <div style="font-weight:800">↳ ${escapeHtml(r.type)}</div>
+              <div class="pill">🖼️ ${rHasPhotos ? r.photos.length : 0}</div>
+            </td>
+            <td>${escapeHtml(r.hours)}</td>
+            <td><b>${fmtMoney(r.price)}</b></td>
+            <td>${escapeHtml(r.note || "")}</td>
+            <td>
+              <div class="actions">
+                <button class="linkbtn danger" data-del-room="${h.id}::${r.id}">Delete Room</button>
+              </div>
+            </td>
+          `;
+          tbody.appendChild(sub);
+        }
+      }
+    }
+
+    // bindings
+    tbody.querySelectorAll("[data-toggle]").forEach(b => b.addEventListener("click", () => {
+      const id = b.dataset.toggle;
+      if (state.hidden.has(id)) state.hidden.delete(id);
+      else state.hidden.add(id);
+      renderTable();
+    }));
+    tbody.querySelectorAll("[data-edit]").forEach(b => b.addEventListener("click", () => editHotel(b.dataset.edit)));
+    tbody.querySelectorAll("[data-del]").forEach(b => b.addEventListener("click", () => deleteHotel(b.dataset.del)));
+    tbody.querySelectorAll("[data-del-room]").forEach(b => b.addEventListener("click", () => deleteSavedRoom(b.dataset.delRoom)));
+
+    tbody.querySelectorAll("[data-view-room]").forEach(b => b.addEventListener("click", () => {
+      const [hid, rid] = b.dataset.viewRoom.split("::");
+      openSavedRoomModal(hid, rid, 0);
+    }));
+  }
+
+  // ---------- Modal ----------
+  function openSavedRoomModal(hotelId, roomId, startIdx){
+    const h = state.hotels.find(x => x.id === hotelId);
+    if (!h) return;
+    const r = (h.rooms||[]).find(x => x.id === roomId);
+    if (!r || !r.photos || !r.photos.length) return alert("No photos for this room.");
+
+    state.modal.mode = "saved";
+    state.modal.hotelId = hotelId;
+    state.modal.roomId = roomId;
+    state.modal.idx = startIdx;
+    $("modalTitle").textContent = `${h.name} — ${r.type}`;
+    $("modal").classList.add("show");
+    showModalImage();
+  }
+
+  function openTempModal(hotelName, roomType, photos, startIdx){
+    state.tempModalPhotos = photos;
+    state.modal.mode = "temp";
+    state.modal.hotelId = null;
+    state.modal.roomId = null;
+    state.modal.idx = startIdx;
+    $("modalTitle").textContent = `${hotelName} — ${roomType}`;
+    $("modal").classList.add("show");
+    showModalImage();
+  }
+
+  function showModalImage(){
+    let photos = [];
+    if (state.modal.mode === "temp"){
+      photos = state.tempModalPhotos || [];
+    } else {
+      const h = state.hotels.find(x => x.id === state.modal.hotelId);
+      const r = (h?.rooms||[]).find(x => x.id === state.modal.roomId);
+      photos = r?.photos || [];
+    }
+
+    if (!photos.length) return;
+    const total = photos.length;
+    const i = ((state.modal.idx % total) + total) % total;
+    state.modal.idx = i;
+
+    $("viewImg").src = photos[i];
+    $("caption").textContent = `Photo ${i+1} of ${total}`;
+    $("prevBtn").style.display = total > 1 ? "block" : "none";
+    $("nextBtn").style.display = total > 1 ? "block" : "none";
+  }
+
+  function closeModal(){
+    $("modal").classList.remove("show");
+    $("viewImg").src = "";
+    $("caption").textContent = "";
+    state.tempModalPhotos = null;
+    state.modal = { mode:null, hotelId:null, roomId:null, idx:0 };
+  }
+
+  $("closeModal").addEventListener("click", closeModal);
+  $("modal").addEventListener("click", (e) => { if (e.target.id === "modal") closeModal(); });
+  $("prevBtn").addEventListener("click", () => { state.modal.idx--; showModalImage(); });
+  $("nextBtn").addEventListener("click", () => { state.modal.idx++; showModalImage(); });
+
+  let touchX = null;
+  $("viewer").addEventListener("touchstart", (e) => { touchX = e.changedTouches[0].clientX; }, {passive:true});
+  $("viewer").addEventListener("touchend", (e) => {
+    if (touchX == null) return;
+    const dx = e.changedTouches[0].clientX - touchX;
+    touchX = null;
+    if (Math.abs(dx) < 35) return;
+    if (dx < 0) state.modal.idx++;
+    else state.modal.idx--;
+    showModalImage();
+  }, {passive:true});
+
+  // ---------- Export / Import / wipe ----------
+  $("dataActions").addEventListener("change", async () => {
+    const v = $("dataActions").value;
+    $("dataActions").value = "";
+
+    if (v === "export") {
+      const blob = new Blob([JSON.stringify(state.hotels, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "hotel_rooms_export.json";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+    }
+
+    if (v === "import") $("importFile").click();
+
+    if (v === "wipe") {
+      if (!confirm("This will delete ALL saved hotels on this device. Continue?")) return;
+      state.hotels = [];
+      state.hidden = new Set();
+      save();
+      renderTable();
+      clearAllForm();
+    }
+  });
+
+  $("importFile").addEventListener("change", async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+      if (!Array.isArray(imported)) throw new Error("Invalid JSON");
+
+      for (const h of imported){
+        if (!h.id) h.id = uid();
+        if (!h.createdAt) h.createdAt = Date.now();
+        if (!Array.isArray(h.rooms)) h.rooms = [];
+        for (const r of h.rooms){
+          if (!r.id) r.id = uid();
+          if (!Array.isArray(r.photos)) r.photos = [];
+        }
+        if (!h.name) h.name = "Unnamed Hotel";
+        if (!h.rooms.length) h.rooms.push({ id: uid(), type:"Room", hours:1, price:0, note:"", photos:[] });
+      }
+
+      state.hotels = imported;
+      save();
+      renderTable();
+      alert("Imported successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Import failed. Please select a valid export JSON file.");
+    }
+  });
+
+  // ---------- Bindings ----------
+  $("addRoomBtn").addEventListener("click", addRoomToTemp);
+  $("clearRoomBtn").addEventListener("click", clearRoomCard);
+  $("saveHotelBtn").addEventListener("click", saveHotelToList);
+  $("clearAllBtn").addEventListener("click", () => {
+    if (confirm("Clear hotel name + temporary rooms?")) clearAllForm();
+  });
+
+  $("search").addEventListener("input", renderTable);
+  $("sortBy").addEventListener("change", renderTable);
+
+  // init
+  load();
+  renderTempRooms();
+  renderTable();
+</script>
+</body>
+</html>
