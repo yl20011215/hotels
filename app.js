@@ -291,11 +291,7 @@ function renderTable(){
       <td colspan="5">
         <div class="hotelTitle">
           <div class="name">${escapeHtml(h.name)}</div>
-          <div class="hotelStats">
-            <span class="pill">🛏️ Rooms: ${st.roomCount}</span>
-            <span class="pill">⏱️ Best Hours: ${escapeHtml(st.minHours)}</span>
-            <span class="pill">💰 Best Price: ${fmtMoney(st.minPrice)} LKR</span>
-          </div>
+          
         </div>
       </td>
       <td>
