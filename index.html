@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Hotel Rate Comparator</title>
+
+  <!-- Cache-bust: change v=1 to v=2 if CSS not updating -->
+  <link rel="stylesheet" href="styles.css?v=2" />
+</head>
+<body>
+
+  <div class="app">
+
+    <!-- HERO -->
+    <header class="hero">
+      <!-- animated gradient bar -->
+      <div class="heroBar"></div>
+
+      <div class="heroInner">
+        <div class="brand">
+          <div class="logo">🏨</div>
+          <div>
+            <h1>Hotel Rate Comparator</h1>
+          </div>
+        </div>
+
+        
+      </div>
+    </header>
+
+    <main class="wrap">
+      <div class="grid">
+
+        <!-- Form Card -->
+        <section class="card card--glow">
+          <div class="cardHead">
+            <div>
+              <div class="kicker">ADD / EDIT</div>
+              <h2>Hotel & Rooms</h2>
+            </div>
+          </div>
+
+          <label>Hotel / Location name</label>
+          <input id="hotelName" class="input" placeholder="e.g., Negombo - Ocean View Hotel" />
+
+          <div class="sectionTitle">
+            <span class="pill" id="roomCountPill">🛏️ 0</span>
+          </div>
+
+          <label>Room type name</label>
+          <input id="roomType" class="input" placeholder="e.g., Standard / Deluxe / Family" />
+
+          <div class="row">
+            <div>
+              <label>Hours</label>
+              <input id="roomHours" class="input" type="number" min="0" step="0.5" placeholder="e.g., 6" />
+            </div>
+            <div>
+              <label>Price (LKR)</label>
+              <input id="roomPrice" class="input" type="number" min="0" step="1" placeholder="e.g., 8500" />
+            </div>
+          </div>
+
+          <label>Note (optional)</label>
+          <textarea id="roomNote" class="input textarea" placeholder="e.g., AC / breakfast / extra person price..."></textarea>
+
+          <label>Room photos (multiple)</label>
+          <input id="roomPhotos" class="input file" type="file" accept="image/*" multiple />
+
+          <div class="btns">
+            <button class="btn btn--soft" id="addRoomBtn" type="button">+ Add Room to Hotel</button>
+            <button class="btn btn--ghost" id="clearRoomBtn" type="button">Clear Room</button>
+          </div>
+
+          <div class="roomsBlock">
+            <div class="sectionTitle sectionTitle--tight">
+              <h3>Rooms added to this hotel</h3>
+              <span class="mini">preview before saving</span>
+            </div>
+            <div id="tempRooms"></div>
+          </div>
+
+          <div class="btns btns--bottom">
+            <button class="btn btn--primary" id="saveHotelBtn" type="button">Save Hotel to List</button>
+            <button class="btn btn--ghost" id="clearAllBtn" type="button">Clear All</button>
+          </div>
+
+          <p class="hint">✅ Rooms are stored temporarily until you click <b>Save Hotel to List</b>.</p>
+        </section>
+
+        <!-- Table Card -->
+        <section class="card card--glow">
+          <div class="cardHead">
+            <div>
+              <div class="kicker">VIEW & COMPARE</div>
+              <h2>Saved Hotels</h2>
+            </div>
+            <div class="chip chip--accent">Rooms shown by default</div>
+          </div>
+
+          <div class="topbar">
+            <div>
+              <label>Search</label>
+              <input id="search" class="input" placeholder="type hotel / room type / note..." />
+            </div>
+
+            <div class="small">
+              <label>Sort hotels by</label>
+              <select id="sortBy" class="input select">
+                <option value="createdDesc">Newest first</option>
+                <option value="minPriceAsc">Cheapest room price (low → high)</option>
+                <option value="minPriceDesc">Cheapest room price (high → low)</option>
+                <option value="minHoursAsc">Lowest hours (low → high)</option>
+                <option value="minHoursDesc">Lowest hours (high → low)</option>
+              </select>
+            </div>
+
+            <div class="tiny">
+              <label>Export / Import</label>
+              <select id="dataActions" class="input select">
+                <option value="">Choose…</option>
+                <option value="export">Export JSON</option>
+                <option value="import">Import JSON</option>
+                <option value="wipe">Wipe all</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="tableShell">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th style="width:56px">🖼️ Photos</th>
+                  <th>🏨 Hotel</th>
+                  <th style="width:140px">⏱️ Hours</th>
+                  <th style="width:170px">💰 Price (LKR)</th>
+                  <th>📝 Note</th>
+                  <th style="width:210px">⚙️ Actions</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+
+          <p class="hint">Rooms are shown by default. Tap <b>Hide Rooms</b> to collapse. Tap a photo to open the slider.</p>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal viewer -->
+  <div class="modal" id="modal" aria-hidden="true">
+    <div class="modalBox">
+      <div class="modalHead">
+        <b id="modalTitle">Photos</b>
+        <button class="btn btn--ghost btn--sm" id="closeModal" type="button">Close</button>
+      </div>
+      <div class="viewer" id="viewer">
+        <img id="viewImg" alt="room photo" />
+        <button class="navBtn prev" id="prevBtn" type="button">◀</button>
+        <button class="navBtn next" id="nextBtn" type="button">▶</button>
+      </div>
+      <div class="caption" id="caption"></div>
+    </div>
+  </div>
+
+  <input id="importFile" type="file" accept="application/json" style="display:none" />
+  <script src="app.js"></script>
+</body>
+</html>
